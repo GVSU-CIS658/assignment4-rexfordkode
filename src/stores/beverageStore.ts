@@ -41,10 +41,40 @@ export const useBeverageStore = defineStore("beverage", () => {
 
   // State for selections (to be added in next steps)
 
+  // Array to hold saved beverage recipes
+  const beverages = ref<any[]>([]); // Will type in next steps
+  const beverageName = ref("");
+
+  // State for selected beverage
+  const selectedBeverageId = ref<string | null>(null);
+
+  // Action to select and show a beverage
+  function showBeverage(beverageId: string) {
+    selectedBeverageId.value = beverageId;
+    // Will update selection state in next steps
+  }
+
+  // Action to create and save a beverage recipe
+  function makeBeverage() {
+    if (!beverageName.value.trim()) return;
+    const newBeverage = {
+      id: Date.now().toString(),
+      name: beverageName.value,
+      // base, creamer, syrup, temp will be added in next steps
+    };
+    beverages.value.push(newBeverage);
+    beverageName.value = "";
+  }
+
   return {
     temps,
     bases,
     creamers,
     syrups,
+    beverageName,
+    beverages,
+    selectedBeverageId,
+    makeBeverage,
+    showBeverage,
   };
 });
