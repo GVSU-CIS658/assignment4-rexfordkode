@@ -15,7 +15,8 @@
     </Contents>
   </Mug>
 </template>
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent } from "vue";
 import Contents from "./Contents.vue";
 import Mug from "./Mug.vue";
 import Syrup from "./Syrup.vue";
@@ -23,8 +24,23 @@ import Base from "./Base.vue";
 import Creamer from "./Creamer.vue";
 import Hot from "./Hot.vue";
 import Cold from "./Cold.vue";
-type Props = {
-  isIced: boolean;
-};
-defineProps<Props>();
+
+export default defineComponent({
+  name: "Beverage",
+  components: {
+    Contents,
+    Mug,
+    Syrup,
+    Base,
+    Creamer,
+    Hot,
+    Cold,
+  },
+  props: {
+    isIced: {
+      type: Boolean,
+      required: true,
+    },
+  },
+});
 </script>
