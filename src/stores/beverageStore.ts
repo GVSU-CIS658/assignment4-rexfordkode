@@ -1,5 +1,9 @@
-import { ref, computed } from "vue";
+import { computed, ref } from "vue";
 import { defineStore } from "pinia";
+import basesData from "../data/bases.json";
+import creamersData from "../data/creamers.json";
+import syrupsData from "../data/syrups.json";
+import temperaturesData from "../data/tempretures.json";
 
 export interface BaseBeverageType {
   id: string;
@@ -19,62 +23,103 @@ export interface SyrupType {
   color: string;
 }
 
-export const useBeverageStore = defineStore("beverage", () => {
-  const temps = ["Hot", "Cold"];
-  const bases: BaseBeverageType[] = [
-    { id: "b1", name: "Black Tea", color: "#8B4513" },
-    { id: "b2", name: "Green Tea", color: "#C8E6C9" },
-    { id: "b3", name: "Coffee", color: "#6F4E37" },
-  ];
-  const creamers: CreamerType[] = [
-    { id: "c1", name: "No Cream", color: "transparent" },
-    { id: "c2", name: "Milk", color: "AliceBlue" },
-    { id: "c3", name: "Cream", color: "#F5F5DC" },
-    { id: "c4", name: "Half & Half", color: "#FFFACD" },
-  ];
-  const syrups: SyrupType[] = [
-    { id: "s1", name: "No Syrup", color: "#c6c6c6" },
-    { id: "s2", name: "Vanilla", color: "#FFEFD5" },
-    { id: "s3", name: "Caramel", color: "#DAA520" },
-    { id: "s4", name: "Hazelnut", color: "#6B4423" },
-  ];
+export interface BeverageRecipe {
+  id: string;
+  name: string;
+  base: string;
+  creamer: string;
+  syrup: string;
+  temp: string;
+}
 
-  // State for selections (to be added in next steps)
+export const useBeverageStore = defineStore(
+  "beverage",
+  () => {
+    const temps = [...temperaturesData];
+    const currentTemp = ref(temps[0]);
+    const bases: BaseBeverageType[] = [...basesData];
+    const creamers: CreamerType[] = [...creamersData];
+    const syrups: SyrupType[] = [...syrupsData];
 
-  // Array to hold saved beverage recipes
-  const beverages = ref<any[]>([]); // Will type in next steps
-  const beverageName = ref("");
+    const selectedBase = ref(bases[0].name);
+    const selectedCreamer = ref(creamers[0].name);
+    const selectedSyrup = ref(syrups[0].name);
 
-  // State for selected beverage
-  const selectedBeverageId = ref<string | null>(null);
+    const beverages = ref<BeverageRecipe[]>([]);
+    const beverageName = ref("");
+    const selectedBeverageId = ref<string | null>(null);
 
-  // Action to select and show a beverage
-  function showBeverage(beverageId: string) {
-    selectedBeverageId.value = beverageId;
-    // Will update selection state in next steps
-  }
+    const selectedBaseData = computed(
+      () => bases.find((base) => base.name === selectedBase.value) ?? bases[0],
+    );
+    const selectedCreamerData = computed(
+      () =>
+        creamers.find((creamer) => creamer.name === selectedCreamer.value) ??
+        creamers[0],
+    );
+    const selectedSyrupData = computed(
+      () =>
+        syrups.find((syrup) => syrup.name === selectedSyrup.value) ?? syrups[0],
+    );
 
-  // Action to create and save a beverage recipe
-  function makeBeverage() {
-    if (!beverageName.value.trim()) return;
-    const newBeverage = {
-      id: Date.now().toString(),
-      name: beverageName.value,
-      // base, creamer, syrup, temp will be added in next steps
+    function showBeverage(beverageId: string) {
+      selectedBeverageId.value = beverageId;
+      const found = beverages.value.find((b) => b.id === beverageId);
+      if (found) {
+        selectedBase.value = found.base;
+        selectedCreamer.value = found.creamer;
+        selectedSyrup.value = found.syrup;
+        currentTemp.value = found.temp;
+      }
+    }
+
+    function makeBeverage() {
+      if (!beverageName.value.trim()) return;
+
+      const newBeverage: BeverageRecipe = {
+        id: Date.now().toString(),
+        name: beverageName.value.trim(),
+        base: selectedBase.value,
+        creamer: selectedCreamer.value,
+        syrup: selectedSyrup.value,
+        temp: currentTemp.value,
+      };
+
+      beverages.value.push(newBeverage);
+      selectedBeverageId.value = newBeverage.id;
+      beverageName.value = "";
+    }
+
+    return {
+      temps,
+      bases,
+      creamers,
+      syrups,
+      beverageName,
+      beverages,
+      selectedBeverageId,
+      currentTemp,
+      selectedBase,
+      selectedCreamer,
+      selectedSyrup,
+      selectedBaseData,
+      selectedCreamerData,
+      selectedSyrupData,
+      makeBeverage,
+      showBeverage,
     };
-    beverages.value.push(newBeverage);
-    beverageName.value = "";
-  }
-
-  return {
-    temps,
-    bases,
-    creamers,
-    syrups,
-    beverageName,
-    beverages,
-    selectedBeverageId,
-    makeBeverage,
-    showBeverage,
-  };
-});
+  },
+  {
+    persist: {
+      storage: sessionStorage,
+      pick: [
+        "beverages",
+        "selectedBeverageId",
+        "selectedBase",
+        "selectedCreamer",
+        "selectedSyrup",
+        "currentTemp",
+      ],
+    },
+  },
+);
